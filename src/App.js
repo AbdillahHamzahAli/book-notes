@@ -1,25 +1,52 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import { supabase } from "./lib/helper/supabaseClient";
 
-function App() {
+export default function App() {
+  const [user, setUser] = useState(null);
+  const login = async () => {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "github",
+    });
+    if (error) throw error;
+  };
+  const logout = async () => {
+    await supabase.auth.signOut();
+  };
+
+  const getSession = async () => {
+    const { data, error } = await supabase.auth.getSession();
+    setUser(data.session?.user);
+  };
+
+  useEffect(() => {
+    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+      switch (event) {
+        case "SIGNED_IN":
+          setUser(session?.user);
+          break;
+        case "SIGNED_OUT":
+          setUser(null);
+          break;
+        default:
+          break;
+      }
+    });
+    getSession();
+    return () => {
+      authListener.unsubscribe();
+    };
+  }, []);
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+    <div>
+      {user ? (
+        <div>
+          <h1>Authenticated</h1>
+          <button onClick={logout}>Logout</button>
+        </div>
+      ) : (
+        <button onClick={login}>Login with github</button>
+      )}
     </div>
   );
 }
-
-export default App;
