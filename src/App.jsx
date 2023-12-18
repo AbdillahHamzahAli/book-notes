@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "./lib/helper/supabaseClient";
 import { Route, Routes } from "react-router-dom";
-import SignUp from "./pages/SignUp";
-import SignIn from "./pages/SignIn";
-import Books from "./pages/Books";
+import { SignIn, SignUp, Books, CreateBook } from "./pages";
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -37,7 +35,14 @@ export default function App() {
     <Routes>
       <Route path="/" element={<SignIn />} />
       <Route path="/signup" element={<SignUp />} />
-      {user ? <Route path="/books" element={<Books user={user} />} /> : ""}
+      {user ? (
+        <>
+          <Route path="/books" element={<Books user={user} />} />
+          <Route path="/books/create" element={<CreateBook />} />
+        </>
+      ) : (
+        ""
+      )}
     </Routes>
   );
 }
