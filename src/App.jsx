@@ -38,7 +38,7 @@ export default function App() {
       {user ? (
         <>
           <Route path="/books" element={<Books user={user} />} />
-          <Route path="/books/create" element={<CreateBook />} />
+          <Route path="/books/create" element={<CreateBook user={user} />} />
         </>
       ) : (
         ""
