@@ -1,8 +1,14 @@
 import React, { useState } from "react";
 import { supabase } from "../../lib/helper/supabaseClient";
+import { v4 as uuidv4 } from "uuid";
+import { useNavigate } from "react-router-dom";
 
 export default function CreateBook({ user }) {
-  const [img, setImg] = useState(null);
+  const navigate = useNavigate();
+  const [img, setImg] = useState({
+    cover: null,
+    url: "",
+  });
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -15,8 +21,8 @@ export default function CreateBook({ user }) {
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "thumbnail" && files) {
-      setImg(URL.createObjectURL(files[0]));
-      setFormData((prevData) => ({ ...prevData, [name]: files[0].name + user.id }));
+      setImg((prevData) => ({ ...prevData, url: URL.createObjectURL(files[0]) }));
+      setFormData((prevData) => ({ ...prevData, [name]: uuidv4() }));
     } else {
       setFormData((prevData) => ({ ...prevData, [name]: value }));
     }
@@ -42,10 +48,19 @@ export default function CreateBook({ user }) {
     }
 
     try {
-      console.log("Data berhasil dikirim ke Supabase:", formData);
+      await supabase
+        .from("Books")
+        .upsert([{ ...formData, user_id: user.id }])
+        .select("*");
+      uploadImg();
+      navigate("/books");
     } catch (error) {
       alert("Error saat mengirim data ke Supabase:", error);
     }
+  };
+
+  const uploadImg = async () => {
+    await supabase.storage.from("book-cover").upload(user.id + "/" + formData.thumbnail, img.cover);
   };
 
   return (
@@ -82,9 +97,19 @@ export default function CreateBook({ user }) {
                 <div className="cursor-pointer mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10" onClick={() => document.querySelector("#thumbnail").click()}>
                   <div className="text-center">
                     <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                      <input id="thumbnail" name="thumbnail" type="file" className="sr-only" onChange={handleInputChange} />
-                      {img ? (
-                        <img src={img} alt="" className="w-full h-auto  object-cover" />
+                      <input
+                        id="thumbnail"
+                        name="thumbnail"
+                        type="file"
+                        accept="image/png, image/jpeg"
+                        className="sr-only"
+                        onChange={(e) => {
+                          handleInputChange(e);
+                          setImg((prevData) => ({ ...prevData, cover: e.target.files[0] }));
+                        }}
+                      />
+                      {img.url ? (
+                        <img src={img.url} alt="" className="w-full h-auto  object-cover" />
                       ) : (
                         <div>
                           <p className="py-1">Upload or drag and drop</p>
