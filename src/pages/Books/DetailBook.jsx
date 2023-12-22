@@ -13,7 +13,7 @@ export default function DetailBook({ user }) {
   const getData = async () => {
     try {
       const { data } = await supabase.from("Books").select("*").eq("user_id", user.id).eq("slug", params.slug).single();
-      setData(data);
+      return setData(data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -23,18 +23,9 @@ export default function DetailBook({ user }) {
     const isConfirmed = window.confirm("Apakah Anda yakin ingin menghapus data ini?");
     if (isConfirmed) {
       try {
-        const { error } = await supabase.from("Books").delete().eq("user_id", user.id).eq("slug", data.slug);
-
-        if (error) {
-          throw error;
-        }
-
-        const { error: storageError } = await supabase.storage.from("book-cover").remove([`${user.id}/${data.thumbnail}`]);
-
-        if (storageError) {
-          throw storageError;
-        }
-        navigate("/books");
+        await supabase.storage.from("book-cover").remove([`${user.id}/${data.thumbnail}`]);
+        await supabase.from("Books").delete().eq("user_id", user.id).eq("slug", data.slug);
+        return navigate("/books");
       } catch (error) {
         throw error;
       }
@@ -44,7 +35,8 @@ export default function DetailBook({ user }) {
 
   useEffect(() => {
     getData();
-  });
+    return;
+  }, []);
 
   return (
     <div className="w-full h-screen flex justify-center items-center">

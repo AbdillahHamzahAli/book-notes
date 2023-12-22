@@ -19,7 +19,7 @@ export default function Books({ user }) {
 
   useEffect(() => {
     getData();
-  }, [user.id, data]);
+  }, []);
 
   return (
     <div>
