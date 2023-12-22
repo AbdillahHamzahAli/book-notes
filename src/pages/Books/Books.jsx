@@ -47,11 +47,13 @@ export default function Books({ user }) {
             {data.map((item, i) => {
               return (
                 <div key={i} className="relative h-full rounded-lg shadow-md overflow-hidden">
-                  <img src={CDNURL + user.id + "/" + item.thumbnail} alt="Gambar Card" className="w-96 h-96 object-cover" />
-                  <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black"></div>
-                  <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                    <h2 className="text-2xl font-semibold ">{item.title}</h2>
-                  </div>
+                  <Link to={"/books/detail/" + item.slug}>
+                    <img src={CDNURL + user.id + "/" + item.thumbnail} alt="Gambar Card" className="w-96 h-96 object-cover" />
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black"></div>
+                    <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
+                      <h2 className="text-2xl font-semibold ">{item.title}</h2>
+                    </div>
+                  </Link>
                 </div>
               );
             })}
