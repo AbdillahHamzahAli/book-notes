@@ -19,7 +19,7 @@ export default function Books({ user }) {
 
   useEffect(() => {
     getData();
-  }, [user.id]); // Bergantung pada perubahan user.id
+  }, [user.id, data]);
 
   return (
     <div>
