@@ -40,7 +40,6 @@ export default function UpdateBook({ user }) {
     if (name === "title") {
       generateSlug(value);
     }
-    console.log(formData);
   };
 
   const generateSlug = (title) => {
