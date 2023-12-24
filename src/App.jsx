@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "./lib/helper/supabaseClient";
-import { Route, Routes } from "react-router-dom";
+import { Route, Routes, useNavigate } from "react-router-dom";
 import { SignIn, SignUp, Books, CreateBook, DetailBook, UpdateBook } from "./pages";
 
 export default function App() {
+  const navigate = useNavigate();
+
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
 
@@ -43,7 +45,7 @@ export default function App() {
           <Route path="/books/detail/:slug" element={<DetailBook user={user} />} />
         </>
       ) : (
-        ""
+        navigate("..")
       )}
     </Routes>
   );
