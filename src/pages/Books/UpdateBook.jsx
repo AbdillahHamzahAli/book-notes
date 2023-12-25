@@ -32,11 +32,13 @@ export default function UpdateBook({ user }) {
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === "thumbnail" && files) {
+    if (name === "thumbnail" && files.length !== 0) {
+      setImg((prevData) => ({ ...prevData, cover: e.target.files[0] }));
       setImg((prevData) => ({ ...prevData, url: URL.createObjectURL(files[0]) }));
-    } else {
+    } else if (name !== "thumbnail") {
       setFormData((prevData) => ({ ...prevData, [name]: value }));
     }
+
     if (name === "title") {
       generateSlug(value);
     }
@@ -117,17 +119,7 @@ export default function UpdateBook({ user }) {
                 <div className="cursor-pointer mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10" onClick={() => document.querySelector("#thumbnail").click()}>
                   <div className="text-center">
                     <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                      <input
-                        id="thumbnail"
-                        name="thumbnail"
-                        type="file"
-                        accept="image/png, image/jpeg"
-                        className="sr-only"
-                        onChange={(e) => {
-                          handleInputChange(e);
-                          setImg((prevData) => ({ ...prevData, cover: e.target.files[0] }));
-                        }}
-                      />
+                      <input id="thumbnail" name="thumbnail" type="file" accept="image/png, image/jpeg" className="sr-only" onChange={handleInputChange} />
                       {img.url ? (
                         <img src={img.url} alt="" className="w-full h-auto  object-cover" />
                       ) : (

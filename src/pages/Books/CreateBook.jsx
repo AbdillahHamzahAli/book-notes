@@ -3,12 +3,9 @@ import { supabase } from "../../lib/helper/supabaseClient";
 import { v4 as uuidv4 } from "uuid";
 import { useNavigate, Link } from "react-router-dom";
 
-export default function CreateBook({ user }) {
+const CreateBook = ({ user }) => {
   const navigate = useNavigate();
-  const [img, setImg] = useState({
-    cover: null,
-    url: "",
-  });
+  const [img, setImg] = useState({ cover: null, url: "" });
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -20,12 +17,15 @@ export default function CreateBook({ user }) {
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === "thumbnail" && files) {
-      setImg((prevData) => ({ ...prevData, url: URL.createObjectURL(files[0]) }));
+
+    if (name === "thumbnail" && files.length > 0) {
+      const file = files[0];
+      setImg({ cover: file, url: URL.createObjectURL(file) });
       setFormData((prevData) => ({ ...prevData, [name]: uuidv4() }));
-    } else {
+    } else if (name !== "thumbnail") {
       setFormData((prevData) => ({ ...prevData, [name]: value }));
     }
+
     if (name === "title") {
       generateSlug(value);
     }
@@ -43,6 +43,7 @@ export default function CreateBook({ user }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!formData.title || !formData.thumbnail) {
       return alert("Kolom title & thumbnail harus diisi");
     }
@@ -60,7 +61,7 @@ export default function CreateBook({ user }) {
   };
 
   const uploadImg = async () => {
-    await supabase.storage.from("book-cover").upload(user.id + "/" + formData.thumbnail, img.cover);
+    await supabase.storage.from("book-cover").upload(`${user.id}/${formData.thumbnail}`, img.cover);
   };
 
   return (
@@ -72,94 +73,86 @@ export default function CreateBook({ user }) {
             <p className="mt-1 text-sm leading-6 text-gray-600">This information will be displayed publicly so be careful what you share.</p>
 
             <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
-              {/* title */}
-              <div className="sm:col-span-4">
-                <label htmlFor="title" className="block text-sm font-medium leading-6 text-gray-900">
-                  Book Title
-                </label>
-                <div className="mt-2">
-                  <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+              <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
+                {/* title */}
+                <div className="sm:col-span-4">
+                  <label htmlFor="title" className="block text-sm font-medium leading-6 text-gray-900">
+                    Book Title
+                  </label>
+                  <div className="mt-2">
+                    <div className="flex rounded-md shadow-sm ring-1 ring-inset ring-gray-300 focus-within:ring-2 focus-within:ring-inset focus-within:ring-indigo-600 sm:max-w-md">
+                      <input
+                        type="text"
+                        name="title"
+                        className="block flex-1 border-0 bg-transparent py-1.5 px-3 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
+                        placeholder="Book Title"
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+                </div>
+                {/* thumbnail */}
+                <div className="col-span-full">
+                  <label htmlFor="cover-photo" className="block text-sm font-medium leading-6 text-gray-900">
+                    Cover Book
+                  </label>
+                  <div className="cursor-pointer mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10" onClick={() => document.querySelector("#thumbnail").click()}>
+                    <div className="text-center">
+                      <div className="mt-4 flex text-sm leading-6 text-gray-600">
+                        <input id="thumbnail" name="thumbnail" type="file" accept="image/png, image/jpeg" className="sr-only" onChange={handleInputChange} />
+                        {img.url ? (
+                          <img src={img.url} alt="" className="w-full h-auto object-cover" />
+                        ) : (
+                          <div>
+                            <p className="py-1">Upload or drag and drop</p>
+                            <p className="text-xs leading-5 text-gray-600">PNG, JPG, GIF up to 10MB</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {/* many_pages */}
+                <div className="sm:col-span-3">
+                  <label htmlFor="many_pages" className="block text-sm font-medium leading-6 text-gray-900">
+                    Many Pages
+                  </label>
+                  <div className="mt-2">
                     <input
-                      type="text"
-                      name="title"
-                      className="block flex-1 border-0 bg-transparent py-1.5 px-3 text-gray-900 placeholder:text-gray-400 focus:ring-0 sm:text-sm sm:leading-6"
-                      placeholder="Book Title"
+                      type="number"
+                      name="many_pages"
+                      className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                       onChange={handleInputChange}
                     />
                   </div>
                 </div>
-              </div>
-              {/* thumbnail */}
-              <div className="col-span-full">
-                <label htmlFor="cover-photo" className="block text-sm font-medium leading-6 text-gray-900">
-                  Cover Book
-                </label>
-                <div className="cursor-pointer mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10" onClick={() => document.querySelector("#thumbnail").click()}>
-                  <div className="text-center">
-                    <div className="mt-4 flex text-sm leading-6 text-gray-600">
-                      <input
-                        id="thumbnail"
-                        name="thumbnail"
-                        type="file"
-                        accept="image/png, image/jpeg"
-                        className="sr-only"
-                        onChange={(e) => {
-                          handleInputChange(e);
-                          setImg((prevData) => ({ ...prevData, cover: e.target.files[0] }));
-                        }}
-                      />
-                      {img.url ? (
-                        <img src={img.url} alt="" className="w-full h-auto  object-cover" />
-                      ) : (
-                        <div>
-                          <p className="py-1">Upload or drag and drop</p>
-                          <p className="text-xs leading-5 text-gray-600">PNG, JPG, GIF up to 10MB</p>
-                        </div>
-                      )}
-                    </div>
+                {/* page_read */}
+                <div className="sm:col-span-3">
+                  <label htmlFor="page_read" className="block text-sm font-medium leading-6 text-gray-900">
+                    Page Read
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      type="number"
+                      name="page_read"
+                      className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                      onChange={handleInputChange}
+                    />
                   </div>
                 </div>
-              </div>
-              {/* many_pages */}
-              <div className="sm:col-span-3">
-                <label htmlFor="many_pages" className="block text-sm font-medium leading-6 text-gray-900">
-                  Many Pages
-                </label>
-                <div className="mt-2">
-                  <input
-                    type="number"
-                    name="many_pages"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-              {/* page_read */}
-              <div className="sm:col-span-3">
-                <label htmlFor="page_read" className="block text-sm font-medium leading-6 text-gray-900">
-                  Page Read
-                </label>
-                <div className="mt-2">
-                  <input
-                    type="number"
-                    name="page_read"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    onChange={handleInputChange}
-                  />
-                </div>
-              </div>
-              {/* link */}
-              <div className="sm:col-span-4">
-                <label htmlFor="link" className="block text-sm font-medium leading-6 text-gray-900">
-                  Link File Book
-                </label>
-                <div className="mt-2">
-                  <input
-                    name="link_book"
-                    type="url"
-                    className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
-                    onChange={handleInputChange}
-                  />
+                {/* link */}
+                <div className="sm:col-span-4">
+                  <label htmlFor="link" className="block text-sm font-medium leading-6 text-gray-900">
+                    Link File Book
+                  </label>
+                  <div className="mt-2">
+                    <input
+                      name="link_book"
+                      type="url"
+                      className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+                      onChange={handleInputChange}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -180,4 +173,6 @@ export default function CreateBook({ user }) {
       </form>
     </div>
   );
-}
+};
+
+export default CreateBook;
