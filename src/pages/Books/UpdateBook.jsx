@@ -3,14 +3,12 @@ import { supabase } from "../../lib/helper/supabaseClient";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { v4 as uuidv4 } from "uuid";
 
-export default function UpdateBook({ user }) {
-  const CDNURL = "https://pnjolpsznjbefwhxrhds.supabase.co/storage/v1/object/public/book-cover/";
+const CDNURL = "https://pnjolpsznjbefwhxrhds.supabase.co/storage/v1/object/public/book-cover/";
+
+const UpdateBook = ({ user }) => {
   const params = useParams();
   const navigate = useNavigate();
-  const [img, setImg] = useState({
-    cover: null,
-    url: "",
-  });
+  const [img, setImg] = useState({ cover: null, url: "" });
   const [formData, setFormData] = useState({
     title: "",
     slug: "",
@@ -19,12 +17,14 @@ export default function UpdateBook({ user }) {
     page_read: "",
     link_book: "",
   });
+  const [oldThumbnail, setOldThumbnail] = useState("");
 
   const getData = async () => {
     try {
       const { data } = await supabase.from("Books").select("*").eq("user_id", user.id).eq("slug", params.slug).single();
-      setImg((prevData) => ({ ...prevData, url: CDNURL + user.id + "/" + data.thumbnail }));
-      return setFormData(data);
+
+      setImg({ ...img, url: CDNURL + user.id + "/" + data.thumbnail });
+      setFormData(data);
     } catch (error) {
       console.error("Error fetching data:", error);
     }
@@ -32,9 +32,12 @@ export default function UpdateBook({ user }) {
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === "thumbnail" && files.length !== 0) {
-      setImg((prevData) => ({ ...prevData, cover: e.target.files[0] }));
-      setImg((prevData) => ({ ...prevData, url: URL.createObjectURL(files[0]) }));
+
+    if (name === "thumbnail" && files.length > 0) {
+      const file = files[0];
+      setImg({ cover: file, url: URL.createObjectURL(file) });
+      setOldThumbnail(formData.thumbnail);
+      setFormData((prevData) => ({ ...prevData, thumbnail: uuidv4() }));
     } else if (name !== "thumbnail") {
       setFormData((prevData) => ({ ...prevData, [name]: value }));
     }
@@ -56,17 +59,19 @@ export default function UpdateBook({ user }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
     if (!formData.title || !formData.thumbnail) {
       return alert("Kolom title & thumbnail harus diisi");
     }
 
     try {
-      updateImg();
+      await updateImg();
       await supabase
         .from("Books")
         .update([{ ...formData, user_id: user.id }])
         .eq("user_id", user.id)
         .eq("slug", params.slug);
+
       navigate("/books");
     } catch (error) {
       alert("Error saat mengirim data ke Supabase:", error);
@@ -74,10 +79,8 @@ export default function UpdateBook({ user }) {
   };
 
   const updateImg = async () => {
-    await supabase.storage.from("book-cover").update(user.id + "/" + formData.thumbnail, img.cover, {
-      upsert: true,
-      contentType: "image/jpeg",
-    });
+    await supabase.storage.from("book-cover").remove(user.id + "/" + oldThumbnail);
+    await supabase.storage.from("book-cover").upload(user.id + "/" + formData.thumbnail, img.cover);
   };
 
   useEffect(() => {
@@ -195,4 +198,5 @@ export default function UpdateBook({ user }) {
       </form>
     </div>
   );
-}
+};
+export default UpdateBook;

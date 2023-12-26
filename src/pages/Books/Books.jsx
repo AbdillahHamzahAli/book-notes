@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { supabase } from "../../lib/helper/supabaseClient";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Books({ user }) {
   const CDNURL = "https://pnjolpsznjbefwhxrhds.supabase.co/storage/v1/object/public/book-cover/";
-
+  const navigate = useNavigate();
   const [data, setData] = useState([]);
 
   // Function
@@ -15,6 +15,11 @@ export default function Books({ user }) {
     } catch (error) {
       console.error("Error fetching data:", error);
     }
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    return navigate("..");
   };
 
   useEffect(() => {
@@ -33,7 +38,10 @@ export default function Books({ user }) {
               <h1 className="font-semibold text-lg">Users</h1>
               <p className="mt-2 text-base">A list of all the users in your account including their name, title, email and role.</p>
             </div>
-            <div className="my-2">
+            <div className="my-2 flex flex-grow justify-end">
+              <button onClick={signOut} className="py-2 px-3 mr-2 text-center text-base bg-red-500 rounded-md font-bold text-white">
+                Sign Out
+              </button>
               <Link to="/books/create" className="py-2 px-3 text-center text-base bg-blue-500 rounded-md font-bold text-white">
                 Add Book
               </Link>
